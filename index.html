@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScratchJrBlocks</title>
+    <style>
+        #preview {
+            width: fit-content;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>ScratchJrBlocks</h1>
+    <p>Enter the name of a ScratchJr block (e.g. forward) to create an SVG version of it! Enter several in a row (e.g. flag right forever) to create a script. Press enter (break to a new line) to create more than one script. Enter ellipses (...) or general names (e.g. block) to create placeholder blocks.</p>
+    <p><strong>Not all blocks have been added yet. This is still in a very work-in-progress stage. Progress will be made very soon! This early version was released to show what's been done so far.</strong></p>
+    <textarea id="input" placeholder="..."></textarea>
+    <pre id="preview">
+    <script>
+        //// [WARNING] ////
+
+        /* This code is horribly written. It will be redone. It just works. For now, you might not wanna use it as a basis for anything. */
+
+        /** @type {{[key: string]: {shape: string, hover: string, shadow: string, offset?: number}}} */
+        const shapes = {
+            caretCmd: {
+                shape: 'caretcmd.svg',
+                hover: 'caretcmd.svg',
+                shadow: 'shadowCmd.svg'
+            },
+
+            yellowStart: {
+                shape: 'start.svg',
+                hover: 'startH.png',
+                shadow: 'shadowStart.svg'
+            },
+            yellowCmd: {
+                shape: 'yellowCmd.svg',
+                hover: 'yellowCmdH.png',
+                shadow: 'shadowCmd.svg'
+            },
+            repeat: {
+                shape: 'repeat.png',
+                hover: 'repeatH.png',
+                shadow: 'shadowRepeat.png'
+            },
+            blueCmd: {
+                shape: 'blueCmd.svg',
+                hover: 'blueCmdH.png',
+                shadow: 'shadowCmd.svg'
+            },
+            orangeCmd: {
+                shape: 'flow.svg',
+                hover: 'flowH.png',
+                shadow: 'shadowCmd.svg'
+            },
+            pinkCmd: {
+                shape: 'looks.svg',
+                hover: 'looksH.png',
+                shadow: 'shadowCmd.svg'
+            },
+
+            redEnd: {
+                shape: 'endshort.svg',
+                hover: 'stopH.svg',
+                shadow: 'shadowEndShort.svg'
+            },
+            redEndLong: {
+                shape: 'endlong.svg',
+                hover: 'stoplongH.png',
+                shadow: 'shadowEndLong.svg'
+            }
+        }
+
+        /** @type {{[key: string]: {shape: string, icon: string, icons?: {[key: string]: string}, input?: 'n'|'t'|'m'|'d'|'s'|'p'}}} */
+        const blocks = {
+            caretcmd: {
+                shape: 'caretCmd'
+            },
+            onflag: {
+                shape: 'yellowStart',
+                icon: 'greenFlag.svg'
+            },
+            onmessage: {
+                shape: 'yellowStart',
+                icon: 'LetterGet_Orange.svg',
+                icons: {
+                    Orange: 'LetterGet_Orange.svg',
+                    Red: 'LetterGet_Red.svg',
+                    Yellow: 'LetterGet_Yellow.svg',
+                    Green: 'LetterGet_Green.svg',
+                    Blue: 'LetterGet_Blue.svg',
+                    Purple: 'LetterGet_Purple.svg'
+                },
+                input: 'm',
+                value: 'Orange'
+            },
+            onclick: {
+                shape: 'yellowStart',
+                icon: 'OnTouch.svg'
+            },
+            ontouch: {
+                shape: 'yellowStart',
+                icon: 'Bump.svg'
+            },
+            message: {
+                shape: 'yellowCmd',
+                icon: 'LetterSend_Orange.svg',
+                icons: {
+                    Orange: 'LetterSend_Orange.svg',
+                    Red: 'LetterSend_Red.svg',
+                    Yellow: 'LetterSend_Yellow.svg',
+                    Green: 'LetterSend_Green.svg',
+                    Blue: 'LetterSend_Blue.svg',
+                    Purple: 'LetterSend_Purple.svg',
+                },
+                input: 'm',
+                value: 'Orange'
+            },
+            repeat: {
+                shape: 'repeat',
+                icon: 'Repeat.svg'
+            },
+            forward: {
+                shape: 'blueCmd',
+                icon: 'Foward.svg',
+                input: 'n',
+                value: 1
+            },
+            back: {
+                shape: 'blueCmd',
+                icon: 'Back.svg',
+                input: 'n',
+                value: 1
+            },
+            up: {
+                shape: 'blueCmd',
+                icon: 'Up.svg',
+                input: 'n',
+                value: 1
+            },
+            down: {
+                shape: 'blueCmd',
+                icon: 'Down.svg',
+                input: 'n',
+                value: 1
+            },
+            right: {
+                shape: 'blueCmd',
+                icon: 'Right.svg',
+                input: 'n',
+                value: 1
+            },
+            left: {
+                shape: 'blueCmd',
+                icon: 'Left.svg',
+                input: 'n',
+                value: 1
+            },
+            home: {
+                shape: 'blueCmd',
+                icon: 'Home.svg'
+            },
+            hop: {
+                shape: 'blueCmd',
+                icon: 'Hop.svg',
+                input: 'n',
+                value: 2
+            },
+            wait: {
+                shape: 'orangeCmd',
+                icon: 'Wait.svg'
+            },
+            setspeed: {
+                shape: 'orangeCmd',
+                icon: 'speed1.svg',
+                icons: {
+                    0: 'speed0.svg',
+                    1: 'speed1.svg',
+                    2: 'speed2.svg'
+                },
+                input: 'd',
+                value: 1
+            },
+
+            say: {
+                shape: 'pinkCmd',
+                icon: 'Say.svg',
+                input: "t",
+                value: 'hi'
+            },
+
+            endstack: {
+                shape: 'redEnd'
+            },
+            forever: {
+                shape: 'redEnd',
+                icon: 'Forever.svg'
+            },
+            gotopage: {
+                shape: 'redEndLong'
+            }
+        };
+
+        const names = {
+            gf: blocks.onflag,
+            flag: blocks.onflag,
+            'on gf': blocks.onflag,
+            'on flag': blocks.onflag,
+            'green flag': blocks.onflag,
+
+            when: blocks.onmessage,
+            onmsg: blocks.onmessage,
+            receive: blocks.onmessage,
+            received: blocks.onmessage,
+            onletter: blocks.onmessage,
+            'on msg': blocks.onmessage,
+            onletter: blocks.onmessage,
+            onreceive: blocks.onmessage,
+            onreceived: blocks.onmessage,
+            'on letter': blocks.onmessage,
+            'on message': blocks.onmessage,
+            'on receive': blocks.onmessage,
+            'on received': blocks.onmessage,
+            'when letter': blocks.onmessage,
+            'when receive': blocks.onmessage,
+            'when received': blocks.onmessage,
+
+            tap: blocks.onclick,
+            click: blocks.onclick,
+            ontap: blocks.onclick,
+            tapped: blocks.onclick,
+            clicked: blocks.onclick,
+            'on tap': blocks.onclick,
+            'on click': blocks.onclick,
+            'when tapped': blocks.onclick,
+            'when clicked': blocks.onclick,
+
+            touch: blocks.ontouch,
+            'on touch': blocks.ontouch,
+
+            msg: blocks.message,
+            letter: blocks.message,
+            broadcast: blocks.message,
+
+            move: blocks.forward,
+            forth: blocks.forward,
+            foward: blocks.forward,
+            'go forth': blocks.forward,
+            'go right': blocks.forward,
+            'go forward': blocks.forward,
+            'move forth': blocks.forward,
+            'move right': blocks.forward,
+            'glide forth': blocks.forward,
+            'glide right': blocks.forward,
+            'move forward': blocks.forward,
+            'glide forward': blocks.forward,
+
+            backward: blocks.back,
+            'go back': blocks.back,
+            'go left': blocks.back,
+            'move back': blocks.back,
+            'move left': blocks.back,
+            'glide back': blocks.back,
+            'glide left': blocks.back,
+            'go backward': blocks.back,
+            'move backward': blocks.back,
+            'glide backward': blocks.back,
+
+            upward: blocks.up,
+            'go up': blocks.up,
+            'move up': blocks.up,
+            'glide up': blocks.up,
+            'go upward': blocks.up,
+            'move upward': blocks.up,
+            'glide upward': blocks.up,
+
+            downward: blocks.down,
+            'go down': blocks.down,
+            'move down': blocks.down,
+            'glide down': blocks.down,
+            'go downward': blocks.down,
+            'move downward': blocks.down,
+            'glide downward': blocks.down,
+
+            cw: blocks.right,
+            'spin cw': blocks.right,
+            'turn cw': blocks.right,
+            clockwise: blocks.right,
+            rightward: blocks.right,
+            'rotate cw': blocks.right,
+            'spin right': blocks.right,
+            'turn right': blocks.right,
+            'rotate right': blocks.right,
+            'spin clockwise': blocks.right,
+            'turn clockwise': blocks.right,
+            'spin rightward': blocks.right,
+            'turn rightward': blocks.right,
+            'rotate clockwise': blocks.right,
+            'rotate rightward': blocks.right,
+
+            ccw: blocks.left,
+            leftward: blocks.left,
+            'spin ccw': blocks.left,
+            'turn ccw': blocks.left,
+            'spin left': blocks.left,
+            'turn left': blocks.left,
+            'rotate ccw': blocks.left,
+            'rotate left': blocks.left,
+            'spin leftward': blocks.left,
+            'turn leftward': blocks.left,
+            counterclockwise: blocks.left,
+            'rotate leftward': blocks.left,
+            'spin counterclockwise': blocks.left,
+            'turn counterclockwise': blocks.left,
+            'rotate counterclockwise': blocks.left,
+
+            reset: blocks.home,
+            'go home': blocks.home,
+            'move home': blocks.home,
+
+            fly: blocks.hop,
+            jump: blocks.hop,
+            leap: blocks.hop,
+            skip: blocks.hop,
+            bound: blocks.hop,
+            bounce: blocks.hop,
+
+            delay: blocks.wait,
+            pause: blocks.wait,
+
+            speed: blocks.setspeed,
+            'set speed': blocks.setspeed,
+
+            slow: Object.assign(Object.assign({}, blocks.setspeed), { value: 0 }),
+            walk: Object.assign(Object.assign({}, blocks.setspeed), { value: 0 }),
+            jog: Object.assign(Object.assign({}, blocks.setspeed), { value: 1 }),
+            run: Object.assign(Object.assign({}, blocks.setspeed), { value: 2 }),
+            fast: Object.assign(Object.assign({}, blocks.setspeed), { value: 2 }),
+
+            end: blocks.endstack,
+            'end stack': blocks.endstack,
+            'end script': blocks.endstack,
+            'stop stack': blocks.endstack,
+            'stop script': blocks.endstack,
+
+            // you psycho... 'for ever'?!?!! really???? *sigh*
+            'for ever': blocks.forever,
+
+            page: blocks.gotopage,
+            goto: blocks.gotopage,
+            'go to': blocks.gotopage,
+            'goto page': blocks.gotopage,
+
+            '…': blocks.caretcmd,
+            blk: blocks.caretcmd,
+            cmd: blocks.caretcmd,
+            block: blocks.caretcmd,
+            caret: blocks.caretcmd,
+            '...': blocks.caretcmd,
+            '....': blocks.caretcmd,
+            command: blocks.caretcmd,
+            '.....': blocks.caretcmd,
+            'caret cmd': blocks.caretcmd,
+            'caretcommand': blocks.caretcmd,
+            'caret command': blocks.caretcmd,
+        };
+
+        async function getAsset(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Response status: ${response.status}`);
+                }
+
+                const result = await response.text();
+                // console.log(result);
+                return new DOMParser().parseFromString(result, 'image/svg+xml').firstElementChild;
+            } catch (error) {
+                console.error(error.message);
+            }
+        }
+
+        async function getBlockSVG(block) {
+            const shape = shapes[block.shape];
+            const shapeSVG = await getAsset('./assets/blocks/' + shape.shape);
+            // console.log('./assets/icons/'+block.icon);
+            const icon = blocks.icons && block.icons[block.value] ? await getAsset('./assets/icons/' + block.icons[block.value]) : block.icon ? await getAsset('./assets/icons/' + block.icon) : '<svg></svg>';
+
+            /* NOTE: Scales for block input SVGs are determined using a viewport height of 768.0px. (ScratchJr changes the size of the input SVGs depending on the height of the ScratchJr app window, so the size that gave a scaleMultiplier of 1 was used since it made the most sense. scaleMultiplier was calculated by the height of the window divided by 768.0, so it seemed like that must be the intended default viewport height.) */
+
+            let inputSVG = '';
+            let inputOutset = 0;
+            const input = block.input;
+            const value = block.value;
+            if (input === "n") {
+                inputSVG = await getAsset('./assets/inputs/Number.svg');
+                inputSVG.setAttribute('x', 9.984);
+                inputSVG.setAttribute('y', 54.9888);
+                inputSVG.querySelector('text').textContent = '' + Math.min(Math.max(Math.round(Number(value) ? Number(value) : 0), -99), 99);
+                inputOutset += 54.9888 + inputSVG.getAttribute('height') - Number(shapeSVG.getAttribute('height'));
+            } else if (input === "t") {
+                inputSVG = await getAsset('./assets/inputs/Text.svg');
+                inputSVG.setAttribute('x', 5.9904);
+                inputSVG.setAttribute('y', 54.9888);
+                const textElem = inputSVG.querySelector('text');
+                textElem.textContent = value;
+
+                // TODO: For some reason this isn't working, must fix for accuracy with ScratchJr (getComputedTextLength always returning 0??)
+                if (textElem.getComputedTextLength() > 42.0096) {
+                    textElem.setAttribute('text-anchor', 'start');
+                    textElem.setAttribute('x', '1');
+                }
+
+                inputOutset += 54.9888 + inputSVG.getAttribute('height') - Number(shapeSVG.getAttribute('height'));
+            } else if (input === "m" || input === "d") {
+                inputSVG = await getAsset('./assets/inputs/pb.svg');
+                inputSVG.setAttribute('x', shapeSVG.getAttribute('width') / 2 - inputSVG.getAttribute('width') / 2);
+                inputSVG.setAttribute('y', shapeSVG.getAttribute('height') - inputSVG.getAttribute('height') / 2);
+                inputOutset += Number(inputSVG.getAttribute('height') / 2);
+            }
+
+            return new DOMParser().parseFromString(`<svg width="${shapeSVG.getAttribute('width')}" height="${Number(shapeSVG.getAttribute('height')) + inputOutset}">${shapeSVG.outerHTML}${icon.outerHTML}${inputSVG.outerHTML}</svg>`, 'image/svg+xml').firstElementChild;
+        }
+
+        function getBlock(id) {
+            let block = blocks[id];
+            if (block) {
+                block.exists = true;
+            } else {
+                block = names[id];
+                if (block) {
+                    block.exists = true;
+                } else {
+                    return {
+                        shape: 'caretCmd',
+                        icon: '',
+                        exists: false
+                    };
+                }
+            }
+
+            return Object.assign({}, block);
+        }
+
+        /** @type HTMLTextAreaElement */
+        const input = document.getElementById('input');
+        const preview = document.getElementById('preview');
+        input.onchange = input.oninput = async function () {
+            const scripts = input.value.split('\n');
+            const scriptSVGs = [];
+
+            for (const script of scripts) {
+                const blocks = [];
+
+                let source = script.trim();
+                while (source.includes('......')) {
+                    source = source.replace('......', '... ...');
+                }
+
+                while (source.includes('……')) {
+                    source = source.replace('……', '… …');
+                }
+
+                const lines = source.split(/\s+/);
+                console.log(lines);
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+                    let block = getBlock(line + ' ' + lines[i + 1]);
+                    if (block.exists) {
+                        i++;
+                        lines[i] = line += ' ' + lines[i + 1];
+                    } else {
+                        block = getBlock(line);
+                        if (!block.exists) {
+                            continue;
+                        }
+                    }
+
+                    let value = lines[i + 1];
+                    if (value != null && !getBlock(value).exists && !getBlock(value + lines[i + 2]).exists) {
+                        i++;
+                        if (block.input === "t") {
+                            let text = '';
+                            if (value.startsWith('"')) {
+                                text = value.substring(1);
+                                while (i + 1 < lines.length) {
+                                    i++;
+                                    value = lines[i];
+                                    if (value.includes('"')) {
+                                        const index = value.indexOf('"');
+                                        if (value.includes('"') && !(value.indexOf('\\"', index - 1) === index - 1 && value.indexOf('\\\\"', index - 2) !== index - 2)) {
+                                            text += value.substring(0, index);
+                                            break;
+                                        } else {
+                                            text += value;
+                                        }
+                                    }
+                                }
+                            } else {
+                                text = value;
+                                while (i + 1 < lines.length) {
+                                    i++;
+                                    value = lines[i];
+                                    if (!getBlock(value).exists && !getBlock(value + lines[i + 1]).exists) {
+                                        text += ' ' + value;
+                                    } else {
+                                        i--;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            block.value = text;
+                        } else if (block.input === "n") {
+                            if (!Number.isNaN(Number(value))) {
+                                block.value = value;
+                            }
+                        } else {
+                            block.value = value;
+                        }
+                    }
+
+                    blocks.push(block);
+                }
+
+                let x = 0;
+                const blockSVGs = [];
+                for (const block of blocks) {
+                    const svg = await getBlockSVG(block);
+                    svg.setAttribute('x', x);
+                    blockSVGs.push(svg);
+
+                    // 73.5 is perfectly aligned, but ScratchJr itself does not do this! :O
+                    x += svg.getAttribute('width') - 12;
+                }
+
+                scriptSVGs.push(`<svg y="${scriptSVGs.length * 90}" width="${x + 12}">${blockSVGs.map((svg) => svg.outerHTML).join('')}</svg>`);
+            }
+
+            let width = 0;
+            const parser = new DOMParser();
+            for (const scriptSVG of scriptSVGs) {
+                const n = Number(parser.parseFromString(scriptSVG, 'image/svg+xml').firstElementChild.getAttribute('width'));
+                if (n > width) {
+                    width = n;
+                }
+            }
+
+            preview.innerHTML = `<svg width="${width}" height="${scriptSVGs.length * 90}">${scriptSVGs.join('')}</svg>`;
+        }
+    </script>
+</body>
+</html>
