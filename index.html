@@ -9,13 +9,26 @@
         #preview {
             width: fit-content;
         }
+
+        body {
+            font-family: sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: black;
+                color: white;
+            }
+        }
     </style>
 </head>
 
 <body>
     <h1>ScratchJrBlocks</h1>
-    <p>Enter the name of a ScratchJr block (e.g. forward) to create an SVG version of it! Enter several in a row (e.g. flag right forever) to create a script. Press enter (break to a new line) to create more than one script. Enter ellipses (...) or general names (e.g. block) to create placeholder blocks.</p>
-    <p><strong>Not all blocks have been added yet. This is still in a very work-in-progress stage. Progress will be made very soon! This early version was released to show what's been done so far.</strong></p>
+    <p>Enter the name of a ScratchJr block (e.g. forward) to create an SVG version of it! Enter several in a row (e.g.
+        flag right forever) to create a script. To pass an input to a block, enter the input directly after the block name (e.g. jump 5, letter Yellow, say bye, speed 2). There are also various short names which have prefilled values (e.g. slow, fast, pop). Press enter (break to a new line) to create more than one script. Enter
+        ellipses (...) or general names (e.g. block) to create placeholder blocks.</p>
+    <p><strong>This is a work-in-progress.</strong> Not everything works as expected yet.</p>
     <textarea id="input" placeholder="..."></textarea>
     <pre id="preview">
     <script>
@@ -25,12 +38,21 @@
 
         /** @type {{[key: string]: {shape: string, hover: string, shadow: string, offset?: number}}} */
         const shapes = {
+            caretStart: {
+                shape: 'caretstart.svg',
+                hover: 'caretstart.svg',
+                shadow: 'shadowStart.svg'
+            },
             caretCmd: {
                 shape: 'caretcmd.svg',
                 hover: 'caretcmd.svg',
                 shadow: 'shadowCmd.svg'
             },
-
+            caretEnd: {
+                shape: 'caretend.svg',
+                hover: 'caretend.svg',
+                shadow: 'shadowEndShort.svg'
+            },
             yellowStart: {
                 shape: 'start.svg',
                 hover: 'startH.png',
@@ -61,6 +83,11 @@
                 hover: 'looksH.png',
                 shadow: 'shadowCmd.svg'
             },
+            limeCmd: {
+                shape: 'sounds.svg',
+                hover: 'soundsH.png',
+                shadow: 'shadowCmd.svg'
+            },
 
             redEnd: {
                 shape: 'endshort.svg',
@@ -74,10 +101,16 @@
             }
         }
 
-        /** @type {{[key: string]: {shape: string, icon: string, icons?: {[key: string]: string}, input?: 'n'|'t'|'m'|'d'|'s'|'p'}}} */
+        /** @type {{[key: string]: {shape: string, icon: string, icons?: {[key: string]: string}, input?: 'n'|'t'|'m'|'d'|'s'|'r'|'p'}}} */
         const blocks = {
+            caretstart: {
+                shape: 'caretStart'
+            },
             caretcmd: {
                 shape: 'caretCmd'
+            },
+            caretend: {
+                shape: 'caretEnd'
             },
             onflag: {
                 shape: 'yellowStart',
@@ -184,12 +217,48 @@
                 input: 'd',
                 value: 1
             },
+            stopmine: {
+                shape: 'orangeCmd',
+                icon: 'Stop.svg'
+            },
 
             say: {
                 shape: 'pinkCmd',
                 icon: 'Say.svg',
                 input: "t",
                 value: 'hi'
+            },
+            show: {
+                shape: 'pinkCmd',
+                icon: 'Appear.svg'
+            },
+            hide: {
+                shape: 'pinkCmd',
+                icon: 'Disappear.svg'
+            },
+            grow: {
+                shape: 'pinkCmd',
+                icon: 'Grow.svg'
+            },
+            shrink: {
+                shape: 'pinkCmd',
+                icon: 'Shrink.svg'
+            },
+            same: {
+                shape: 'pinkCmd',
+                icon: 'Reset.svg'
+            },
+
+            playsnd: {
+                shape: 'limeCmd',
+                icon: 'Speaker.svg',
+                input: "s",
+                value: 'pop.mp3'
+            },
+            playusersnd: {
+                shape: 'limeCmd',
+                icon: 'Microphone.svg',
+                input: "r"
             },
 
             endstack: {
@@ -204,12 +273,21 @@
             }
         };
 
+        // TODO: These names are quite excessive. I felt it might make the interface friendlier, bit I could stick to unique one word names and drop the other ones... saves complexity
         const names = {
             gf: blocks.onflag,
             flag: blocks.onflag,
             'on gf': blocks.onflag,
             'on flag': blocks.onflag,
             'green flag': blocks.onflag,
+            onstart: blocks.onflag,
+            onstarted: blocks.onflag,
+            'when gf': blocks.onflag,
+            'when flag': blocks.onflag,
+            'on start': blocks.onflag,
+            'on started': blocks.onflag,
+            'when start': blocks.onflag,
+            'when started': blocks.onflag,
 
             when: blocks.onmessage,
             onmsg: blocks.onmessage,
@@ -245,9 +323,11 @@
             letter: blocks.message,
             broadcast: blocks.message,
 
+            go: blocks.forward,
             move: blocks.forward,
             forth: blocks.forward,
-            foward: blocks.forward,
+            glide: blocks.forward,
+            forwards: blocks.forward,
             'go forth': blocks.forward,
             'go right': blocks.forward,
             'go forward': blocks.forward,
@@ -257,8 +337,13 @@
             'glide right': blocks.forward,
             'move forward': blocks.forward,
             'glide forward': blocks.forward,
+            'go forwards': blocks.forward,
+            'move forwards': blocks.forward,
+            'glide forwards': blocks.forward,
+            'change x': blocks.forward,
 
             backward: blocks.back,
+            backwards: blocks.back,
             'go back': blocks.back,
             'go left': blocks.back,
             'move back': blocks.back,
@@ -268,24 +353,39 @@
             'go backward': blocks.back,
             'move backward': blocks.back,
             'glide backward': blocks.back,
+            'go backwards': blocks.back,
+            'move backwards': blocks.back,
+            'glide backwards': blocks.back,
 
             upward: blocks.up,
+            upwards: blocks.up,
             'go up': blocks.up,
             'move up': blocks.up,
             'glide up': blocks.up,
             'go upward': blocks.up,
             'move upward': blocks.up,
             'glide upward': blocks.up,
+            'go upwards': blocks.up,
+            'move upwards': blocks.up,
+            'glide upwards': blocks.up,
+            'change y': blocks.up,
 
             downward: blocks.down,
+            downwards: blocks.down,
             'go down': blocks.down,
             'move down': blocks.down,
             'glide down': blocks.down,
             'go downward': blocks.down,
             'move downward': blocks.down,
             'glide downward': blocks.down,
+            'go downwards': blocks.down,
+            'move downwards': blocks.down,
+            'glide downwards': blocks.down,
 
             cw: blocks.right,
+            spin: blocks.right,
+            turn: blocks.right,
+            rotate: blocks.right,
             'spin cw': blocks.right,
             'turn cw': blocks.right,
             clockwise: blocks.right,
@@ -298,8 +398,18 @@
             'turn clockwise': blocks.right,
             'spin rightward': blocks.right,
             'turn rightward': blocks.right,
+            'change direction': blocks.right,
             'rotate clockwise': blocks.right,
             'rotate rightward': blocks.right,
+            'spin rightwards': blocks.right,
+            'turn rightwards': blocks.right,
+            'rotate rightwards': blocks.right,
+            'spin forward': blocks.right,
+            'spin forwards': blocks.right,
+            'turn forward': blocks.right,
+            'turn forwards': blocks.right,
+            'rotate forward': blocks.right,
+            'rotate forwards': blocks.right,
 
             ccw: blocks.left,
             leftward: blocks.left,
@@ -313,13 +423,32 @@
             'turn leftward': blocks.left,
             counterclockwise: blocks.left,
             'rotate leftward': blocks.left,
+            'spin leftwards': blocks.left,
+            'turn leftwards': blocks.left,
+            'rotate leftwards': blocks.left,
+            'spin backward': blocks.left,
+            'spin backwards': blocks.left,
+            'turn backward': blocks.left,
+            'turn backwards': blocks.left,
+            'rotate backward': blocks.left,
+            'rotate backwards': blocks.left,
             'spin counterclockwise': blocks.left,
             'turn counterclockwise': blocks.left,
             'rotate counterclockwise': blocks.left,
 
             reset: blocks.home,
+            retreat: blocks.home,
+            fallback: blocks.home,
+            'go back': blocks.home,
             'go home': blocks.home,
+            reposition: blocks.home,
+            'fall back': blocks.home,
+            'move back': blocks.home,
             'move home': blocks.home,
+            'reset pos': blocks.home,
+            'retreat home': blocks.home,
+            'reset position': blocks.home,
+            'reset direction': blocks.home,
 
             fly: blocks.hop,
             jump: blocks.hop,
@@ -333,21 +462,87 @@
 
             speed: blocks.setspeed,
             'set speed': blocks.setspeed,
-
             slow: Object.assign(Object.assign({}, blocks.setspeed), { value: 0 }),
             walk: Object.assign(Object.assign({}, blocks.setspeed), { value: 0 }),
             jog: Object.assign(Object.assign({}, blocks.setspeed), { value: 1 }),
             run: Object.assign(Object.assign({}, blocks.setspeed), { value: 2 }),
+            sprint: Object.assign(Object.assign({}, blocks.setspeed), { value: 2 }),
             fast: Object.assign(Object.assign({}, blocks.setspeed), { value: 2 }),
 
+            stop: blocks.stopmine,
+            stopme: blocks.stopmine,
+            'stop me': blocks.stopmine,
+            'stop mine': blocks.stopmine,
+            'end stacks': blocks.stopmine,
+            'end scripts': blocks.stopmine,
+            'stop sprite': blocks.stopmine,
+            'stop stacks': blocks.stopmine,
+            'stop scripts': blocks.stopmine,
+
             end: blocks.endstack,
+            done: blocks.endstack,
             'end stack': blocks.endstack,
             'end script': blocks.endstack,
             'stop stack': blocks.endstack,
             'stop script': blocks.endstack,
 
+            think: blocks.say,
+
+            appear: blocks.show,
+            render: blocks.show,
+            depoof: blocks.show,
+            repoof: blocks.show,
+            unpoof: blocks.show,
+            display: blocks.show,
+            reappear: blocks.show,
+
+            poof: blocks.hide,
+            remove: blocks.hide,
+            disappear: blocks.hide,
+
+            bigger: blocks.grow,
+            expand: blocks.grow,
+            'scale up': blocks.grow,
+            'change size': blocks.grow,
+            'grow bigger': blocks.grow,
+
+            smaller: blocks.shrink,
+            contract: blocks.shrink,
+            'scale down': blocks.shrink,
+            'grow smaller': blocks.shrink,
+            'shrink smaller': blocks.shrink,
+
+            size: blocks.same,
+            scale: blocks.same,
+            resize: blocks.same,
+            rescale: blocks.same,
+            'same size': blocks.same,
+            'reset size': blocks.same,
+            'same scale': blocks.same,
+            'reset scale': blocks.same,
+
+            play: blocks.playsnd,
+            sound: blocks.playsnd,
+            'play snd': blocks.playsnd,
+            'play sound': blocks.playsnd,
+            pop: Object.assign(Object.assign({}, blocks.playsnd), { value: "pop.mp3" }),
+
+            voice: blocks.playusersnd,
+            usersnd: blocks.playusersnd,
+            usersound: blocks.playusersnd,
+            'play voice': blocks.playusersnd,
+            'user sound': blocks.playusersnd,
+            'play usersnd': blocks.playusersnd,
+            'recorded sound': blocks.playusersnd,
+            'recorded voice': blocks.playusersnd,
+            'recorded usersnd': blocks.playusersnd,
+
             // you psycho... 'for ever'?!?!! really???? *sigh*
             'for ever': blocks.forever,
+            endlessly: blocks.forever,
+            infinitely: blocks.forever,
+            eternally: blocks.forever,
+            'for eternity': blocks.forever,
 
             page: blocks.gotopage,
             goto: blocks.gotopage,
@@ -364,8 +559,18 @@
             command: blocks.caretcmd,
             '.....': blocks.caretcmd,
             'caret cmd': blocks.caretcmd,
-            'caretcommand': blocks.caretcmd,
+            caretcommand: blocks.caretcmd,
             'caret command': blocks.caretcmd,
+
+            hat: blocks.caretstart,
+            start: blocks.caretstart,
+            carethat: blocks.caretstart,
+            'caret start': blocks.caretstart,
+
+            cap: blocks.caretend,
+            caretcap: blocks.caretend,
+            'caret end': blocks.caretend,
+            'caret cap': blocks.caretend
         };
 
         async function getAsset(url) {
@@ -387,7 +592,7 @@
             const shape = shapes[block.shape];
             const shapeSVG = await getAsset('./assets/blocks/' + shape.shape);
             // console.log('./assets/icons/'+block.icon);
-            const icon = blocks.icons && block.icons[block.value] ? await getAsset('./assets/icons/' + block.icons[block.value]) : block.icon ? await getAsset('./assets/icons/' + block.icon) : '<svg></svg>';
+            const icon = block.icons && block.icons[block.value] ? await getAsset('./assets/icons/' + block.icons[block.value]) : block.icon ? await getAsset('./assets/icons/' + block.icon) : '<svg></svg>';
 
             /* NOTE: Scales for block input SVGs are determined using a viewport height of 768.0px. (ScratchJr changes the size of the input SVGs depending on the height of the ScratchJr app window, so the size that gave a scaleMultiplier of 1 was used since it made the most sense. scaleMultiplier was calculated by the height of the window divided by 768.0, so it seemed like that must be the intended default viewport height.) */
 
