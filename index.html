@@ -27,7 +27,7 @@
     <h1>ScratchJrBlocks</h1>
     <p>Enter the name of a ScratchJr block (e.g. forward) to create an SVG version of it! Enter several in a row (e.g.
         flag right forever) to create a script. To pass an input to a block, enter the input directly after the block name (e.g. jump 5, letter Yellow, say bye, speed 2). There are also various short names which have prefilled values (e.g. slow, fast, pop). Press enter (break to a new line) to create more than one script. Enter
-        ellipses (...) or general names (e.g. block) to create placeholder blocks.</p>
+        ellipses (...) or general names (e.g. hat block cap) to create placeholder blocks.</p>
     <p><strong>This is a work-in-progress.</strong> Not everything works as expected yet.</p>
     <textarea id="input" placeholder="..."></textarea>
     <pre id="preview">
@@ -36,6 +36,7 @@
 
         /* This code is horribly written. It will be redone. It just works. For now, you might not wanna use it as a basis for anything. */
 
+        // TODO: Optimize structure and maybe do something with the shadow and hover properties or just remove them
         /** @type {{[key: string]: {shape: string, hover: string, shadow: string, offset?: number}}} */
         const shapes = {
             caretStart: {
@@ -88,7 +89,6 @@
                 hover: 'soundsH.png',
                 shadow: 'shadowCmd.svg'
             },
-
             redEnd: {
                 shape: 'endshort.svg',
                 hover: 'stopH.svg',
@@ -100,7 +100,8 @@
                 shadow: 'shadowEndLong.svg'
             }
         }
-
+        
+        // TODO: Maybe optimize structure with arrays to save space and prevent redundancy (or at least, write it in a shorter format and translate it to objects)
         /** @type {{[key: string]: {shape: string, icon: string, icons?: {[key: string]: string}, input?: 'n'|'t'|'m'|'d'|'s'|'r'|'p'}}} */
         const blocks = {
             caretstart: {
@@ -154,7 +155,9 @@
             },
             repeat: {
                 shape: 'repeat',
-                icon: 'Repeat.svg'
+                icon: 'Repeat.svg',
+                input: 'n',
+                value: 4
             },
             forward: {
                 shape: 'blueCmd',
@@ -204,7 +207,9 @@
             },
             wait: {
                 shape: 'orangeCmd',
-                icon: 'Wait.svg'
+                icon: 'Wait.svg',
+                input: 'n',
+                value: 10
             },
             setspeed: {
                 shape: 'orangeCmd',
@@ -221,7 +226,6 @@
                 shape: 'orangeCmd',
                 icon: 'Stop.svg'
             },
-
             say: {
                 shape: 'pinkCmd',
                 icon: 'Say.svg',
@@ -238,17 +242,20 @@
             },
             grow: {
                 shape: 'pinkCmd',
-                icon: 'Grow.svg'
+                icon: 'Grow.svg',
+                input: 'n',
+                value: 2
             },
             shrink: {
                 shape: 'pinkCmd',
-                icon: 'Shrink.svg'
+                icon: 'Shrink.svg',
+                input: 'n',
+                value: 2
             },
             same: {
                 shape: 'pinkCmd',
                 icon: 'Reset.svg'
             },
-
             playsnd: {
                 shape: 'limeCmd',
                 icon: 'Speaker.svg',
@@ -258,7 +265,8 @@
             playusersnd: {
                 shape: 'limeCmd',
                 icon: 'Microphone.svg',
-                input: "r"
+                input: "r",
+                value: '1'
             },
 
             endstack: {
@@ -269,12 +277,37 @@
                 icon: 'Forever.svg'
             },
             gotopage: {
-                shape: 'redEndLong'
+                shape: 'redEndLong',
+                input: "p",
+                value: 2
             }
         };
 
         // TODO: These names are quite excessive. I felt it might make the interface friendlier, bit I could stick to unique one word names and drop the other ones... saves complexity
         const names = {
+            '…': blocks.caretcmd,
+            blk: blocks.caretcmd,
+            cmd: blocks.caretcmd,
+            block: blocks.caretcmd,
+            caret: blocks.caretcmd,
+            '...': blocks.caretcmd,
+            '....': blocks.caretcmd,
+            command: blocks.caretcmd,
+            '.....': blocks.caretcmd,
+            'caret cmd': blocks.caretcmd,
+            caretcommand: blocks.caretcmd,
+            'caret command': blocks.caretcmd,
+
+            hat: blocks.caretstart,
+            start: blocks.caretstart,
+            carethat: blocks.caretstart,
+            'caret start': blocks.caretstart,
+
+            cap: blocks.caretend,
+            caretcap: blocks.caretend,
+            'caret end': blocks.caretend,
+            'caret cap': blocks.caretend,
+
             gf: blocks.onflag,
             flag: blocks.onflag,
             'on gf': blocks.onflag,
@@ -322,6 +355,16 @@
             msg: blocks.message,
             letter: blocks.message,
             broadcast: blocks.message,
+
+            for: blocks.repeat,
+            rpt: blocks.repeat,
+            iter: blocks.repeat,
+            loop: blocks.repeat,
+            cycle: blocks.repeat,
+            reiter: blocks.repeat,
+            iterate: blocks.repeat,
+            restart: blocks.repeat,
+            reiterate: blocks.repeat,
 
             go: blocks.forward,
             move: blocks.forward,
@@ -502,6 +545,8 @@
 
             bigger: blocks.grow,
             expand: blocks.grow,
+            enlarge: blocks.grow,
+            magnify: blocks.grow,
             'scale up': blocks.grow,
             'change size': blocks.grow,
             'grow bigger': blocks.grow,
@@ -547,30 +592,7 @@
             page: blocks.gotopage,
             goto: blocks.gotopage,
             'go to': blocks.gotopage,
-            'goto page': blocks.gotopage,
-
-            '…': blocks.caretcmd,
-            blk: blocks.caretcmd,
-            cmd: blocks.caretcmd,
-            block: blocks.caretcmd,
-            caret: blocks.caretcmd,
-            '...': blocks.caretcmd,
-            '....': blocks.caretcmd,
-            command: blocks.caretcmd,
-            '.....': blocks.caretcmd,
-            'caret cmd': blocks.caretcmd,
-            caretcommand: blocks.caretcmd,
-            'caret command': blocks.caretcmd,
-
-            hat: blocks.caretstart,
-            start: blocks.caretstart,
-            carethat: blocks.caretstart,
-            'caret start': blocks.caretstart,
-
-            cap: blocks.caretend,
-            caretcap: blocks.caretend,
-            'caret end': blocks.caretend,
-            'caret cap': blocks.caretend
+            'goto page': blocks.gotopage
         };
 
         async function getAsset(url) {
@@ -690,20 +712,24 @@
                         if (block.input === "t") {
                             let text = '';
                             if (value.startsWith('"')) {
-                                text = value.substring(1);
-                                while (i + 1 < lines.length) {
+                                value = value.substring(1);
+                                while (i < lines.length) {
+                                    text += " ";
+                                    const index = value.indexOf('"');
+                                    if (value.includes('"') && !(value.charAt(index-1) === '\\')) {
+                                        text += value.substring(0, index).replace('\\"', '"');
+                                        break;
+                                    } else {
+                                        text += value.replace('\\"', '"');
+                                    }
+
                                     i++;
-                                    value = lines[i];
-                                    if (value.includes('"')) {
-                                        const index = value.indexOf('"');
-                                        if (value.includes('"') && !(value.indexOf('\\"', index - 1) === index - 1 && value.indexOf('\\\\"', index - 2) !== index - 2)) {
-                                            text += value.substring(0, index);
-                                            break;
-                                        } else {
-                                            text += value;
-                                        }
+                                    if (i < lines.length) {
+                                        value = lines[i];
                                     }
                                 }
+
+                                text = text.substring(1);
                             } else {
                                 text = value;
                                 while (i + 1 < lines.length) {
